@@ -74,40 +74,62 @@ export function withPrefix(prefix: string, address: string): string {
   return `${p}${a}`;
 }
 
+// Resultado de um envio. Os nós ignoram; o painel usa para reportar o teste.
+export interface SendResult {
+  ok: boolean;
+  error?: string;
+}
+
+// Mensagem legível de um erro vindo do host (o reject do bridge é um Error).
+function errMsg(err: unknown): string {
+  if (err && typeof err === 'object' && 'message' in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return String(err);
+}
+
 // Envia a linha de comando do GrandMA3 via /cmd (argumento string). Loga erros
 // mas NUNCA lança, para um envio falho não interromper o fluxo de automação.
-export async function sendCmd(conn: Conn, command: string): Promise<void> {
+export async function sendCmd(conn: Conn, command: string): Promise<SendResult> {
   const cmd = (command || '').trim();
   if (!conn.host) {
-    console.warn('[GrandMA3] host não configurado — envio ignorado. Configure no painel.');
-    return;
+    const error = 'host não configurado — configure no painel GrandMA3.';
+    console.warn(`[GrandMA3] ${error}`);
+    return { ok: false, error };
   }
   if (!cmd) {
-    console.warn('[GrandMA3] comando vazio — envio ignorado.');
-    return;
+    const error = 'comando vazio — envio ignorado.';
+    console.warn(`[GrandMA3] ${error}`);
+    return { ok: false, error };
   }
   const address = withPrefix(conn.prefix, '/cmd');
   try {
     await spresenter.net.oscSend(conn.host, conn.port, address, [{ type: 's', value: cmd }]);
+    return { ok: true };
   } catch (err) {
+    const error = errMsg(err);
     console.error(
-      `[GrandMA3] falha ao enviar "${cmd}" → ${conn.host}:${conn.port}${address}:`,
-      err,
+      `[GrandMA3] falha ao enviar "${cmd}" → ${conn.host}:${conn.port}${address}: ${error}`,
     );
+    return { ok: false, error };
   }
 }
 
 // Envia um valor float para um endereço OSC arbitrário (ex.: fader).
-export async function sendOscFloat(conn: Conn, address: string, value: number): Promise<void> {
+export async function sendOscFloat(conn: Conn, address: string, value: number): Promise<SendResult> {
   if (!conn.host) {
-    console.warn('[GrandMA3] host não configurado — envio ignorado. Configure no painel.');
-    return;
+    const error = 'host não configurado — configure no painel GrandMA3.';
+    console.warn(`[GrandMA3] ${error}`);
+    return { ok: false, error };
   }
   const full = withPrefix(conn.prefix, address);
   try {
     await spresenter.net.oscSend(conn.host, conn.port, full, [{ type: 'f', value }]);
+    return { ok: true };
   } catch (err) {
-    console.error(`[GrandMA3] falha ao enviar ${full}=${value}:`, err);
+    const error = errMsg(err);
+    console.error(`[GrandMA3] falha ao enviar ${full}=${value}: ${error}`);
+    return { ok: false, error };
   }
 }
 

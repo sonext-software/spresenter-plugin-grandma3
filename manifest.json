@@ -1,11 +1,11 @@
 {
   "id": "com.spresenter.grandma3",
   "name": "GrandMA3",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Nós de ação para controlar consoles GrandMA3 via OSC (linha de comando, executores, faders, macros e sequences).",
   "author": "Chrystian Farias",
   "minAppVersion": "0.3.1",
-  "sdk": "0.4.0",
+  "sdk": "0.5.0",
   "main": "dist/code.js",
   "ui": "dist/ui/index.html",
   "permissions": ["net:connect"],

@@ -263,12 +263,8 @@ spresenter.ui.onmessage = async (raw: unknown) => {
       spresenter.ui.postMessage({ type: 'test-result', ok: false, error: 'Digite um comando de teste.' });
       return;
     }
-    try {
-      await sendCmd({ host, port, prefix }, command);
-      spresenter.ui.postMessage({ type: 'test-result', ok: true });
-    } catch (err) {
-      spresenter.ui.postMessage({ type: 'test-result', ok: false, error: String(err) });
-    }
+    const res = await sendCmd({ host, port, prefix }, command);
+    spresenter.ui.postMessage({ type: 'test-result', ok: res.ok, error: res.error });
     return;
   }
 };
